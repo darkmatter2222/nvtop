@@ -24,6 +24,7 @@
  *
  */
 
+#include "nvtop/common.h"
 #include "nvtop/device_discovery.h"
 #include "nvtop/extract_gpuinfo_common.h"
 #include <assert.h>
@@ -544,6 +545,9 @@ bool gpuinfo_radeon_init(void)
     _libdrm_drmGetDevices2 = dlsym(_libdrm_dl_handle, "drmGetDevices2");
 
     if (
+        (_libdrm_drmGetVersion == NULL) ||
+        (_libdrm_drmGetLibVersion == NULL) ||
+        (_libdrm_drmFreeVersion == NULL) ||
         (_libdrm_drmGetDevices == NULL && _libdrm_drmGetDevices2 == NULL) ||
         (_libdrm_drmFreeDevices == NULL)
         )
@@ -582,9 +586,11 @@ void gpuinfo_radeon_shutdown(void)
         close(gpu_info->drm_device_node_fd);
 
 
-        _libdrm_drmFreeVersion(gpu_info->drm_device_driver_version);
+        if (gpu_info->drm_device_driver_version)
+            _libdrm_drmFreeVersion(gpu_info->drm_device_driver_version);
 
-        _libdrm_drmFreeVersion(gpu_info->drm_device_lib_version);
+        if (gpu_info->drm_device_lib_version)
+            _libdrm_drmFreeVersion(gpu_info->drm_device_lib_version);
 
 
         if (gpu_info->fanSpeedFILE)
